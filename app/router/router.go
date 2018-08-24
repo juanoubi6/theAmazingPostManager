@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"theAmazingPostManager/app/config"
-	"theAmazingPostManager/app/middleware"
-	"theAmazingPostManager/app/controllers/post"
 	"theAmazingPostManager/app/controllers/comment"
+	"theAmazingPostManager/app/controllers/post"
+	"theAmazingPostManager/app/middleware"
 )
 
 var router *gin.Engine
@@ -36,21 +36,18 @@ func CreateRouter() {
 	postCreation := router.Group("/post", middleware.ValidateToken())
 	{
 		postCreation.POST("", post.CreatePost)
-		postCreation.PUT("/:id", post.ModifyPost)
-		postCreation.DELETE("/:id", post.DeletePost)
-		//Votar post
-		postCreation.PATCH("/:id", post.Vote)
+		postCreation.PUT("/:id", middleware.IsPostOwner(false), post.ModifyPost)
+		postCreation.DELETE("/:id", middleware.IsPostOwner(true), post.DeletePost)
+		postCreation.PATCH("/:id", post.VotePost)
 	}
 
-	commentCreation := router.Group("/post/:postID", middleware.ValidateToken())
+	commentCreation := router.Group("/posts/:postID/comment", middleware.ValidateToken())
 	{
-		commentCreation.POST("/", comment.AddComment)
-		commentCreation.PUT("/:id", comment.EditComment)
-		commentCreation.DELETE("/:id", comment.DeleteComment)
-		//Rate comment
+		commentCreation.POST("", comment.AddComment)
+		commentCreation.PUT("/:id", middleware.IsCommentOwner(false), comment.EditComment)
+		commentCreation.DELETE("/:id", middleware.IsCommentOwner(true), comment.DeleteComment)
+		commentCreation.PATCH("/:id", comment.VoteComment)
 	}
-
-
 
 }
 

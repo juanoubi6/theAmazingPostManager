@@ -3,6 +3,7 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"theAmazingPostManager/app/common"
 	"theAmazingPostManager/app/models"
 	"theAmazingPostManager/app/security"
 )
@@ -63,6 +64,116 @@ func ValidateToken() gin.HandlerFunc {
 		c.Set("last_name", token.LastName)
 		c.Set("email", token.Email)
 	}
+}
+
+func IsPostOwner(allowAdmins bool) gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+		tokenString := c.Request.Header.Get("Authorization")
+		token, err := security.GetTokenData(tokenString)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		postID := c.Param("id")
+
+		postIdVal, err := common.StringToUint(postID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid post ID", "detail": err.Error()})
+			return
+		}
+
+		postData, found, err := models.GetPostById(postIdVal)
+		if found == false {
+			c.JSON(http.StatusBadRequest, gin.H{"description": "The post was not found"})
+			c.Abort()
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+			c.Abort()
+			return
+		}
+
+		userData, found, err := models.GetUserById(token.Id)
+		if found == false {
+			c.JSON(http.StatusBadRequest, gin.H{"description": "User not found"})
+			c.Abort()
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+			c.Abort()
+			return
+		}
+
+		if postData.AuthorID == userData.ID || (allowAdmins == true && userData.RoleID == models.ADMIN) {
+			c.Next()
+		} else {
+			c.JSON(http.StatusForbidden, gin.H{"description": "You are not allowed to make changes to this post", "detail": err.Error()})
+			c.Abort()
+			return
+		}
+
+	}
+
+}
+
+func IsCommentOwner(allowAdmins bool) gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+		tokenString := c.Request.Header.Get("Authorization")
+		token, err := security.GetTokenData(tokenString)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		commentID := c.Param("id")
+
+		commentIdVal, err := common.StringToUint(commentID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid post ID", "detail": err.Error()})
+			return
+		}
+
+		commentData, found, err := models.GetCommentById(commentIdVal)
+		if found == false {
+			c.JSON(http.StatusBadRequest, gin.H{"description": "The comment was not found"})
+			c.Abort()
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+			c.Abort()
+			return
+		}
+
+		userData, found, err := models.GetUserById(token.Id)
+		if found == false {
+			c.JSON(http.StatusBadRequest, gin.H{"description": "User not found"})
+			c.Abort()
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+			c.Abort()
+			return
+		}
+
+		if commentData.AuthorID == userData.ID || (allowAdmins == true && userData.RoleID == models.ADMIN) {
+			c.Next()
+		} else {
+			c.JSON(http.StatusForbidden, gin.H{"description": "You are not allowed to make changes to this comment", "detail": err.Error()})
+			c.Abort()
+			return
+		}
+
+	}
+
 }
 
 func IsAdmin() gin.HandlerFunc {

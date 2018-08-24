@@ -3,19 +3,8 @@ package security
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-errors/errors"
-	"golang.org/x/crypto/bcrypt"
 	"theAmazingPostManager/app/config"
 )
-
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
 
 type JWTCustomClaims struct {
 	Id       uint

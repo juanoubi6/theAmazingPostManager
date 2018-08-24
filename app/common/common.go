@@ -1,13 +1,8 @@
 package common
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"github.com/nats-io/go-nats"
-	"github.com/streadway/amqp"
 	"theAmazingPostManager/app/config"
 )
 
@@ -31,6 +26,3 @@ func ConnectToDatabase() {
 func GetDatabase() *gorm.DB {
 	return db
 }
-
-
-
