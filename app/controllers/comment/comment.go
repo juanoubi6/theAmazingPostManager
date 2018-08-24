@@ -126,4 +126,60 @@ func DeleteComment(c *gin.Context) {
 
 func VoteComment(c *gin.Context) {
 
+	userID := c.MustGet("id").(uint)
+	commentID := c.Param("id")
+	postID := c.Param("postID")
+	vote := c.PostForm("vote")
+
+	commentIdVal, err := common.StringToUint(commentID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid comment ID", "detail": err.Error()})
+		return
+	}
+
+	postIdVal, err := common.StringToUint(postID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid post ID", "detail": err.Error()})
+		return
+	}
+
+	voteValue,err := getVoteValue(vote)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"description": err.Error()})
+		return
+	}
+
+	//Check if user has already voted this comment and change the vote
+	commentVoteData, found, err := models.GetCommentVote(userID,commentIdVal)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
+	if found == false {
+		newCommentVote := models.CommentVote{
+			UserID:userID,
+			CommentID:commentIdVal,
+			PostID:postIdVal,
+			Positive:voteValue,
+		}
+
+		if err := newCommentVote.Save();err != nil{
+			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+			return
+		}
+	}else{
+		if commentVoteData.Positive == voteValue{
+			c.JSON(http.StatusOK, gin.H{})
+			return
+		}else{
+			commentVoteData.Positive = voteValue
+			if err := commentVoteData.Modify();err != nil{
+				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+				return
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
+
 }

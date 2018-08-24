@@ -42,6 +42,28 @@ func (commentData *Comment) Modify() error {
 
 }
 
+func (commentVoteData *CommentVote) Save() error {
+
+	err := common.GetDatabase().Create(commentVoteData).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (commentVoteData *CommentVote) Modify() error {
+
+	err := common.GetDatabase().Save(commentVoteData).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 //Recursive delete of comments
 func DeleteCommentAndChildren(commentID uint) error {
 
@@ -93,4 +115,22 @@ func GetCommentById(id uint) (Comment, bool, error) {
 	}
 
 	return comment, true, nil
+}
+
+func GetCommentVote(userID uint,commentID uint) (CommentVote, bool, error) {
+
+	commentVote := CommentVote{}
+
+	r := common.GetDatabase()
+
+	r = r.Where("user_id = ? and comment_id = ?", userID,commentID).First(&commentVote)
+	if r.RecordNotFound() {
+		return commentVote, false, nil
+	}
+
+	if r.Error != nil {
+		return commentVote, true, r.Error
+	}
+
+	return commentVote, true, nil
 }

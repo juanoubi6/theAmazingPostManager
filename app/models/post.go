@@ -80,6 +80,28 @@ func (postData *Post) Delete() error {
 
 }
 
+func (postVoteData *PostVote) Save() error {
+
+	err := common.GetDatabase().Create(postVoteData).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (postVoteData *PostVote) Modify() error {
+
+	err := common.GetDatabase().Save(postVoteData).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 func GetPostById(id uint) (Post, bool, error) {
 
 	post := Post{}
@@ -96,4 +118,22 @@ func GetPostById(id uint) (Post, bool, error) {
 	}
 
 	return post, true, nil
+}
+
+func GetPostVote(userID uint,postID uint) (PostVote, bool, error) {
+
+	postVote := PostVote{}
+
+	r := common.GetDatabase()
+
+	r = r.Where("user_id = ? and post_id = ?", userID,postID).First(&postVote)
+	if r.RecordNotFound() {
+		return postVote, false, nil
+	}
+
+	if r.Error != nil {
+		return postVote, true, r.Error
+	}
+
+	return postVote, true, nil
 }

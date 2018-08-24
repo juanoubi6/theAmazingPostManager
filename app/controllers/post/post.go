@@ -120,11 +120,59 @@ func DeletePost(c *gin.Context) {
 
 }
 
-func GetPost(c *gin.Context) {
+func VotePost(c *gin.Context) {
+
+	userID := c.MustGet("id").(uint)
+	postID := c.Param("id")
+	vote := c.PostForm("vote")
+
+	postIdVal, err := common.StringToUint(postID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid post ID", "detail": err.Error()})
+		return
+	}
+
+	voteValue,err := getVoteValue(vote)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"description": err.Error()})
+		return
+	}
+
+	//Check if user has already voted this post and change the vote
+	postVoteData, found, err := models.GetPostVote(userID,postIdVal)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
+	if found == false {
+		newPostVote := models.PostVote{
+			UserID:userID,
+			PostID:postIdVal,
+			Positive:voteValue,
+		}
+
+		if err := newPostVote.Save();err != nil{
+			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+			return
+		}
+	}else{
+		if postVoteData.Positive == voteValue{
+			c.JSON(http.StatusOK, gin.H{})
+			return
+		}else{
+			postVoteData.Positive = voteValue
+			if err := postVoteData.Modify();err != nil{
+				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+				return
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
 
 }
 
-func VotePost(c *gin.Context) {
+func GetPost(c *gin.Context) {
 
 }
 
