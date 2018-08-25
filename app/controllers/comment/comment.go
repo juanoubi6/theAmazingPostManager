@@ -39,8 +39,19 @@ func AddComment(c *gin.Context) {
 		commentFatherID = val
 	}
 
+	userData, found, err := models.GetUserById(authorID)
+	if found == false {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "The user was not found"})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
+
 	newComment := models.Comment{
 		AuthorID: authorID,
+		Author:	  userData,
 		Message:  message,
 		Father:   commentFatherID,
 		PostID:   postIdVal,

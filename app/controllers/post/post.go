@@ -25,10 +25,21 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
+	userData, found, err := models.GetUserById(authorID)
+	if found == false {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "The user was not found"})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
+
 	newPost := models.Post{
 		AuthorID:    authorID,
 		Title:       title,
 		Description: description,
+		Author:		 userData,
 	}
 
 	if err := newPost.Save(); err != nil {

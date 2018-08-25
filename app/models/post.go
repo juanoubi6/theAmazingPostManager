@@ -1,6 +1,9 @@
 package models
 
-import "theAmazingPostManager/app/common"
+import (
+	"theAmazingPostManager/app/common"
+	"time"
+)
 
 type Post struct {
 	Id          uint      `gorm:"primary_key"`
@@ -10,6 +13,7 @@ type Post struct {
 	Description string    `gorm:"not null;type:text"`
 	Comments    []Comment `gorm:"ForeignKey:PostID"`
 	Votes       int       `gorm:"default:0"`
+	Created		time.Time `gorm:"default:current_timestamp"`
 }
 
 type PostVote struct {
@@ -108,7 +112,7 @@ func GetPostById(id uint) (Post, bool, error) {
 
 	r := common.GetDatabase()
 
-	r = r.Where("id = ?", id).First(&post)
+	r = r.Where("id = ?", id).Preload("Author").First(&post)
 	if r.RecordNotFound() {
 		return post, false, nil
 	}

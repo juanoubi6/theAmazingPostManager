@@ -1,6 +1,9 @@
 package models
 
-import "theAmazingPostManager/app/common"
+import (
+	"theAmazingPostManager/app/common"
+	"time"
+)
 
 type Comment struct {
 	Id       uint      `gorm:"primary_key"`
@@ -11,6 +14,7 @@ type Comment struct {
 	Father   uint      `gorm:"default:0" json:"-"`
 	PostID   uint      `gorm:"not null" json:"-"`
 	Comments []Comment `gorm:"ForeignKey:Father"`
+	Created	 time.Time `gorm:"default:current_timestamp"`
 }
 
 type CommentVote struct {
@@ -105,7 +109,7 @@ func GetCommentById(id uint) (Comment, bool, error) {
 
 	r := common.GetDatabase()
 
-	r = r.Where("id = ?", id).First(&comment)
+	r = r.Where("id = ?", id).Preload("Author").First(&comment)
 	if r.RecordNotFound() {
 		return comment, false, nil
 	}

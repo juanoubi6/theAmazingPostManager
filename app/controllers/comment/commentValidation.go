@@ -1,7 +1,6 @@
 package comment
 
 import (
-	"github.com/gin-gonic/gin"
 	"errors"
 )
 

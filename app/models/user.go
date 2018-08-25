@@ -10,11 +10,11 @@ type User struct {
 	GUID                 string         `gorm:"type:char(20);unique_index:idx_unique_guid_object" json:"ID"`
 	Name                 string         `gorm:"null"`
 	LastName             string         `gorm:"null"`
-	Email                string         `gorm:"not null"`
-	Phone                string         `gorm:"null"`
+	Email                string         `gorm:"not null" json:"-"`
+	Phone                string         `gorm:"null" json:"-"`
 	PasswordRecoveryCode string         `gorm:"null" json:"-"`
 	RoleID               uint           `gorm:"not null" json:"-"`
-	Role                 Role           `gorm:"ForeignKey:RoleID"`
+	Role                 Role           `gorm:"ForeignKey:RoleID" json:"-"`
 	ProfilePicture       ProfilePicture `gorm:"ForeignKey:UserID"`
 }
 
@@ -31,7 +31,7 @@ func GetUserById(id uint) (user User, found bool, err error) {
 
 	r := common.GetDatabase()
 
-	r = r.Unscoped().Preload("ProfilePicture").Preload("Role").Preload("Addresses").Preload("Addresses.PostalCode").Where("id = ?", id).First(&user)
+	r = r.Unscoped().Preload("ProfilePicture").Preload("Role").Where("id = ?", id).First(&user)
 	if r.RecordNotFound() {
 		return user, false, nil
 	}

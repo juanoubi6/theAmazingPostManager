@@ -82,6 +82,7 @@ func IsPostOwner(allowAdmins bool) gin.HandlerFunc {
 		postIdVal, err := common.StringToUint(postID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid post ID", "detail": err.Error()})
+			c.Abort()
 			return
 		}
 
@@ -109,10 +110,10 @@ func IsPostOwner(allowAdmins bool) gin.HandlerFunc {
 			return
 		}
 
-		if postData.AuthorID == userData.ID || (allowAdmins == true && userData.RoleID == models.ADMIN) {
+		if postData.AuthorID == userData.ID || (allowAdmins == true && userData.RoleID == models.ADMIN){
 			c.Next()
-		} else {
-			c.JSON(http.StatusForbidden, gin.H{"description": "You are not allowed to make changes to this post", "detail": err.Error()})
+		}else{
+			c.JSON(http.StatusForbidden, gin.H{"description": "You are not allowed to make changes to this post"})
 			c.Abort()
 			return
 		}
@@ -137,6 +138,7 @@ func IsCommentOwner(allowAdmins bool) gin.HandlerFunc {
 		commentIdVal, err := common.StringToUint(commentID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid post ID", "detail": err.Error()})
+			c.Abort()
 			return
 		}
 
@@ -167,7 +169,7 @@ func IsCommentOwner(allowAdmins bool) gin.HandlerFunc {
 		if commentData.AuthorID == userData.ID || (allowAdmins == true && userData.RoleID == models.ADMIN) {
 			c.Next()
 		} else {
-			c.JSON(http.StatusForbidden, gin.H{"description": "You are not allowed to make changes to this comment", "detail": err.Error()})
+			c.JSON(http.StatusForbidden, gin.H{"description": "You are not allowed to make changes to this comment"})
 			c.Abort()
 			return
 		}
