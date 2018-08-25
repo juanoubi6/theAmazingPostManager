@@ -36,6 +36,16 @@ func AddComment(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"description": "Something went wrong", "detail": "Invalid comment father ID: " + err.Error()})
 			return
 		}
+
+		_,found,err := models.GetCommentById(val)
+		if found == false{
+			c.JSON(http.StatusBadRequest, gin.H{"description": "Something went wrong", "detail": "Invalid comment father ID"})
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"description": "Something went wrong", "detail": err.Error()})
+			return
+		}
 		commentFatherID = val
 	}
 
@@ -192,5 +202,29 @@ func VoteComment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{})
+
+}
+
+func GetComment(c *gin.Context) {
+
+	commentID := c.Param("id")
+
+	commentIdVal, err := common.StringToUint(commentID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid post ID", "detail": err.Error()})
+		return
+	}
+
+	commentData, found, err := models.GetFullCommentById(commentIdVal)
+	if found == false {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "The post was not found"})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"description":commentData})
 
 }

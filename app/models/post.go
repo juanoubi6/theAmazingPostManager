@@ -14,6 +14,7 @@ type Post struct {
 	Comments    []Comment `gorm:"ForeignKey:PostID"`
 	Votes       int       `gorm:"default:0"`
 	Created		time.Time `gorm:"default:current_timestamp"`
+	CommentQuantity	int	  `gorm:"default:0"`
 }
 
 type PostVote struct {
@@ -128,16 +129,31 @@ func GetPostVote(userID uint,postID uint) (PostVote, bool, error) {
 
 	postVote := PostVote{}
 
-	r := common.GetDatabase()
-
-	r = r.Where("user_id = ? and post_id = ?", userID,postID).First(&postVote)
+	r := common.GetDatabase().Where("user_id = ? and post_id = ?", userID,postID).First(&postVote)
 	if r.RecordNotFound() {
 		return postVote, false, nil
 	}
-
 	if r.Error != nil {
 		return postVote, true, r.Error
 	}
 
 	return postVote, true, nil
+}
+
+func GetFullPostById(id uint) (*Post, bool, error) {
+
+	post := Post{}
+
+	r := common.GetDatabase()
+
+	r = r.Where("id = ?", id).Preload("Author").Preload("Comments").Preload("Comments.Author").First(&post)
+	if r.RecordNotFound() {
+		return &post, false, nil
+	}
+
+	if r.Error != nil {
+		return &post, true, r.Error
+	}
+
+	return &post, true, nil
 }

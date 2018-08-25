@@ -15,15 +15,15 @@ type User struct {
 	PasswordRecoveryCode string         `gorm:"null" json:"-"`
 	RoleID               uint           `gorm:"not null" json:"-"`
 	Role                 Role           `gorm:"ForeignKey:RoleID" json:"-"`
-	ProfilePicture       ProfilePicture `gorm:"ForeignKey:UserID"`
+	//ProfilePicture       ProfilePicture `gorm:"ForeignKey:UserID"`
 }
 
-type ProfilePicture struct {
+/*type ProfilePicture struct {
 	ID     uint   `gorm:"primary_key"`
 	Url    string `gorm:"not null"`
 	S3Key  string `json:"-"`
 	UserID uint   `json:"-"`
-}
+}*/
 
 func GetUserById(id uint) (user User, found bool, err error) {
 
@@ -31,7 +31,7 @@ func GetUserById(id uint) (user User, found bool, err error) {
 
 	r := common.GetDatabase()
 
-	r = r.Unscoped().Preload("ProfilePicture").Preload("Role").Where("id = ?", id).First(&user)
+	r = r.Unscoped().Preload("Role").Where("id = ?", id).First(&user)
 	if r.RecordNotFound() {
 		return user, false, nil
 	}

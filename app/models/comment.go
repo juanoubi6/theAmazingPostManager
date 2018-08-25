@@ -3,6 +3,7 @@ package models
 import (
 	"theAmazingPostManager/app/common"
 	"time"
+	"github.com/jinzhu/gorm"
 )
 
 type Comment struct {
@@ -15,6 +16,7 @@ type Comment struct {
 	PostID   uint      `gorm:"not null" json:"-"`
 	Comments []Comment `gorm:"ForeignKey:Father"`
 	Created	 time.Time `gorm:"default:current_timestamp"`
+	CommentQuantity	int	  `gorm:"default:0"`
 }
 
 type CommentVote struct {
@@ -35,6 +37,14 @@ func (commentData *Comment) Save() error {
 
 }
 
+func (commentData *Comment) AfterCreate(scope *gorm.Scope) (err error) {
+	scope.DB().Exec("UPDATE posts set comment_quantity = comment_quantity + 1 WHERE id = ?;",commentData.PostID)
+	if commentData.Father != 0{
+		scope.DB().Exec("UPDATE comments set comment_quantity = comment_quantity + 1 WHERE id = ?;",commentData.Father)
+	}
+	return
+}
+
 func (commentData *Comment) Modify() error {
 
 	err := common.GetDatabase().Save(commentData).Error
@@ -44,6 +54,14 @@ func (commentData *Comment) Modify() error {
 
 	return nil
 
+}
+
+func (commentData *Comment) AfterDelete(scope *gorm.Scope) (err error) {
+	scope.DB().Exec("UPDATE posts set comment_quantity = comment_quantity - 1 WHERE id = ?;",commentData.PostID)
+	if commentData.Father != 0{
+		scope.DB().Exec("UPDATE comments set comment_quantity = comment_quantity - 1 WHERE id = ?;",commentData.Father)
+	}
+	return
 }
 
 func (commentVoteData *CommentVote) Save() error {
@@ -137,4 +155,22 @@ func GetCommentVote(userID uint,commentID uint) (CommentVote, bool, error) {
 	}
 
 	return commentVote, true, nil
+}
+
+func GetFullCommentById(id uint) (*Comment, bool, error) {
+
+	comment := Comment{}
+
+	r := common.GetDatabase()
+
+	r = r.Where("id = ?", id).Preload("Author").Preload("Comments").Preload("Comments.Author").First(&comment)
+	if r.RecordNotFound() {
+		return &comment, false, nil
+	}
+
+	if r.Error != nil {
+		return &comment, true, r.Error
+	}
+
+	return &comment, true, nil
 }

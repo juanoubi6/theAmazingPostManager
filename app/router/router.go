@@ -30,6 +30,7 @@ func CreateRouter() {
 	{
 		public.GET("/post", middleware.Paginate(), post.GetAllPosts)
 		public.GET("/post/:id", post.GetPost)
+		public.GET("/posts/:postID/comment/:id", comment.GetComment)
 		//Ultimos 10 post creados
 	}
 

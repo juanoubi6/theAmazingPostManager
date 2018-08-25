@@ -162,7 +162,7 @@ func VotePost(c *gin.Context) {
 			Positive:voteValue,
 		}
 
-		if err := newPostVote.Save();err != nil{
+		if err := newPostVote.Save(); err != nil{
 			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 			return
 		}
@@ -184,6 +184,26 @@ func VotePost(c *gin.Context) {
 }
 
 func GetPost(c *gin.Context) {
+
+	postID := c.Param("id")
+
+	postIdVal, err := common.StringToUint(postID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid post ID", "detail": err.Error()})
+		return
+	}
+
+	postData, found, err := models.GetFullPostById(postIdVal)
+	if found == false {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "The post was not found"})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"description":postData})
 
 }
 
