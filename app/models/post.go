@@ -23,6 +23,15 @@ type PostVote struct {
 	Positive bool
 }
 
+type PostView struct{
+	Id          uint
+	Author      User
+	Title       string
+	Votes       int
+	Created		time.Time
+	CommentQuantity	int
+}
+
 func (postData *Post) Save() error {
 
 	err := common.GetDatabase().Create(postData).Error
@@ -156,4 +165,37 @@ func GetFullPostById(id uint) (*Post, bool, error) {
 	}
 
 	return &post, true, nil
+}
+
+func GetAllPosts (order string,limit int,offset int)([]PostView,int,error){
+
+	var posts []Post
+	var postsView []PostView
+	var quantity int
+
+	//Get posts
+	r := common.GetDatabase().Preload("Author").Limit(limit).Offset(offset).Order(order + " desc").Find(&posts)
+	if r.Error != nil {
+		return postsView, 0, r.Error
+	}
+
+	//Get posts quantity
+	r = common.GetDatabase().Table("posts").Count(&quantity)
+	if r.Error != nil {
+		return postsView, 0, r.Error
+	}
+
+	for _, postData := range posts{
+		postsView = append(postsView,PostView{
+			Id:postData.Id,
+			Author:postData.Author,
+			Title:postData.Title,
+			Votes:postData.Votes,
+			Created:postData.Created,
+			CommentQuantity:postData.CommentQuantity,
+		})
+	}
+
+	return postsView, quantity, nil
+
 }

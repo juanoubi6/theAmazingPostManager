@@ -209,4 +209,16 @@ func GetPost(c *gin.Context) {
 
 func GetAllPosts(c *gin.Context) {
 
+	order := c.Query("Order") //Possible orders are: votes,created,comment_quantity
+	limit := c.MustGet("limit").(int)
+	offset := c.MustGet("offset").(int)
+
+	postsData,quantity,err := models.GetAllPosts(order,limit,offset)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"description": map[string]interface{}{"posts": postsData, "quantity": quantity}})
+
 }
