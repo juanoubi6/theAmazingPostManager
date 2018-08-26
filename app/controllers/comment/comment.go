@@ -119,10 +119,17 @@ func EditComment(c *gin.Context) {
 func DeleteComment(c *gin.Context) {
 
 	commentID := c.Param("id")
+	postID := c.Param("postID")
 
 	commentIdVal, err := common.StringToUint(commentID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid comment ID", "detail": err.Error()})
+		return
+	}
+
+	postIdVal, err := common.StringToUint(postID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "Invalid post ID", "detail": err.Error()})
 		return
 	}
 
@@ -136,7 +143,7 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 
-	if err := models.DeleteCommentAndChildren(commentData.Id); err != nil {
+	if err := models.DeleteCommentAndChildren(commentData.Id,postIdVal); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 		return
 	}
@@ -167,6 +174,17 @@ func VoteComment(c *gin.Context) {
 	voteValue,err := getVoteValue(vote)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"description": err.Error()})
+		return
+	}
+
+	//Check comment existance
+	exist,err := models.CheckCommentExistance(commentIdVal,postIdVal)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
+	if exist == false {
+		c.JSON(http.StatusBadRequest, gin.H{"description": "Comment doesn't exist"})
 		return
 	}
 

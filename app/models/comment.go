@@ -26,6 +26,10 @@ type CommentVote struct {
 	Positive  bool
 }
 
+type FatherResult struct{
+	Father uint
+}
+
 func (commentData *Comment) Save() error {
 
 	err := common.GetDatabase().Create(commentData).Error
@@ -87,7 +91,7 @@ func (commentVoteData *CommentVote) Modify() error {
 }
 
 //Recursive delete of comments
-func DeleteCommentAndChildren(commentID uint) error {
+func DeleteCommentAndChildren(commentID uint,postID uint) error {
 
 	//Get this comment children ids
 	var childrenIds []uint
@@ -99,7 +103,7 @@ func DeleteCommentAndChildren(commentID uint) error {
 	//Delete each children
 	if len(childrenIds) > 0 {
 		for _, childrenId := range childrenIds {
-			if err := DeleteCommentAndChildren(childrenId); err != nil {
+			if err := DeleteCommentAndChildren(childrenId,postID); err != nil {
 				return err
 			}
 		}
@@ -107,6 +111,27 @@ func DeleteCommentAndChildren(commentID uint) error {
 
 	//Delete comment votes
 	err = common.GetDatabase().Where("comment_id = ?", commentID).Delete(CommentVote{}).Error
+	if err != nil {
+		return err
+	}
+
+	//Check if the comment has a father and update it
+	var fatherResult FatherResult
+	r := common.GetDatabase().Table("comments").Select("father").Where("id = ?",commentID).First(&fatherResult)
+	if r.RecordNotFound(){
+		println("no tengo padre")
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	err = common.GetDatabase().Exec("UPDATE comments set comment_quantity = comment_quantity - 1 WHERE id = ?",fatherResult.Father).Error
+	if err != nil {
+		return err
+	}
+
+	//Update post comment quantity
+	err = common.GetDatabase().Exec("UPDATE posts set comment_quantity = comment_quantity - 1 WHERE id = ?",postID).Error
 	if err != nil {
 		return err
 	}
@@ -173,4 +198,22 @@ func GetFullCommentById(id uint) (*Comment, bool, error) {
 	}
 
 	return &comment, true, nil
+}
+
+func CheckCommentExistance(commentID uint, postID uint)(bool,error){
+
+	comment := Comment{}
+
+	r := common.GetDatabase()
+
+	r = r.Where("id = ? and post_id = ?", commentID,postID).First(&comment)
+	if r.RecordNotFound() {
+		return false,nil
+	}
+	if r.Error != nil {
+		return true, r.Error
+	}
+
+	return true, nil
+
 }
