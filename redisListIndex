@@ -1,0 +1,2 @@
+latestComents   -> List with x last comments (number can be defined by env variable)
+latestPosts     -> List with x last posts (number can be defined by env variable)

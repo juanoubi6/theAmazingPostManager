@@ -12,6 +12,12 @@ type Config struct {
 	JWT_SECRET string
 	CORS       string
 
+	REDIS_ADDR	string
+	LAST_COMMENTS_LIST_NAME	string
+	LAST_POSTS_LIST_NAME	string
+	LAST_COMMENTS_LENGTH	string
+	LAST_POSTS_LENGTH	string
+
 	DB_TYPE     string
 	DB_USERNAME string
 	DB_PASSWORD string
@@ -40,6 +46,13 @@ func newConfig() Config {
 		PORT:       GetEnv("PORT", "5003"),
 		JWT_SECRET: GetEnv("JWT_SECRET", "j8Ah4kO3"),
 		CORS:       GetEnv("CORS", ""),
+
+		REDIS_ADDR:       GetEnv("REDIS_ADDR", ":6379"),
+
+		LAST_COMMENTS_LIST_NAME:       GetEnv("LAST_COMMENTS_LIST_NAME", "lastComments"),
+		LAST_POSTS_LIST_NAME:       GetEnv("LAST_POSTS_LIST_NAME", "lastPosts"),
+		LAST_COMMENTS_LENGTH:       GetEnv("LAST_COMMENTS_LENGTH", "10"),
+		LAST_POSTS_LENGTH:       GetEnv("LAST_POSTS_LENGTH", "10"),
 
 		DB_TYPE:     GetEnv("DB_TYPE", "mysql"),
 		DB_USERNAME: GetEnv("DB_USERNAME", "root"),
