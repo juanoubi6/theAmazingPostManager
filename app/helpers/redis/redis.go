@@ -1,26 +1,29 @@
-package helpers
+package redis
 
 import (
 	"theAmazingPostManager/app/common"
+	"github.com/sirupsen/logrus"
 )
 
-func InsertIntoCappedList (data []byte,listName string, limit int)error{
+func InsertIntoCappedList (data []byte,listName string, limit int){
 
 	newConn := common.RedisPool.Get()
 
 	//Push element
-	_,err := newConn.Do("LPUSH",listName,string(data))
+	_,err := newConn.Do("LPUSH",listName,data)
 	if err != nil{
-		return err
+		logrus.WithFields(logrus.Fields{
+			"operation": "inserting value in list",
+		}).Info(err.Error())
 	}
 
 	//Trim list
 	_,err = newConn.Do("LTRIM",listName,0,limit)
 	if err != nil{
-		return err
+		logrus.WithFields(logrus.Fields{
+			"operation": "triming list",
+		}).Info(err.Error())
 	}
-
-	return nil
 
 }
 
