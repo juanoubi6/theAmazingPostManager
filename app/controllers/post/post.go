@@ -6,9 +6,9 @@ import (
 	"theAmazingPostManager/app/common"
 	"theAmazingPostManager/app/models"
 	"theAmazingPostManager/app/helpers/redis"
-	"github.com/gin-gonic/gin/json"
 	"theAmazingPostManager/app/config"
 	"strconv"
+	"encoding/json"
 )
 
 func CreatePost(c *gin.Context) {
@@ -239,14 +239,36 @@ func GetAllPosts(c *gin.Context) {
 
 func GetLastPosts(c *gin.Context){
 
+	var postList []models.Post
+	var amount,_ = strconv.Atoi(config.GetConfig().LAST_POSTS_LENGTH)
+	var lastPostListName = config.GetConfig().LAST_POSTS_LIST_NAME
+
 	//Get posts from redis
-	postData,err := redis.RetrieveFromCappedList(config.GetConfig().LAST_POSTS_LIST_NAME,10)
+	postData,err := redis.RetrieveFromCappedList(lastPostListName,amount)
 	if err != nil{
-		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
-		return
+
+		//Get posts from DB
+		postList,err = models.GetLastPosts(amount)
+		if err != nil{
+			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+			return
+		}
+
+	}else{
+
+		//Unmarshal each post from redis
+		var samplePost models.Post
+		for _, postVal := range postData{
+			err = json.Unmarshal(postVal.([]byte),&samplePost)
+			if err != nil{
+				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+				return
+			}
+			postList = append(postList,samplePost)
+		}
+
 	}
 
-	var postList []
-
+	c.JSON(http.StatusOK, gin.H{"description":postList})
 
 }

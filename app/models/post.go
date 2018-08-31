@@ -199,3 +199,17 @@ func GetAllPosts (order string,limit int,offset int)([]PostView,int,error){
 	return postsView, quantity, nil
 
 }
+
+func GetLastPosts (amount int)([]Post,error){
+
+	var postList []Post
+
+	err := common.GetDatabase().Preload("Author").Order("created desc").Limit(amount).Find(&postList).Error
+	if err != nil{
+		return postList,err
+	}
+
+	return postList,nil
+
+
+}
