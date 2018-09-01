@@ -271,7 +271,7 @@ func GetLastComments(c *gin.Context){
 	commentsData,err := redis.RetrieveFromCappedList(lastCommentsListName,amount)
 	if err != nil{
 
-		//Get posts from DB
+		//Get comments from DB
 		commentList,err = models.GetLastComments(0,amount)
 		if err != nil{
 			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
@@ -280,7 +280,7 @@ func GetLastComments(c *gin.Context){
 
 	}else{
 
-		//Unmarshal each post from redis
+		//Unmarshal each comment from redis
 		var sampleComment models.Comment
 		for _, commentVal := range commentsData {
 			err = json.Unmarshal(commentVal.([]byte),&sampleComment)

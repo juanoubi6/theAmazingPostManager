@@ -53,7 +53,7 @@ func CreatePost(c *gin.Context) {
 
 	//Insert into redis, in this case marshal the data. First delete the description because it's a really big field
 	// we don't want to store
-	newPost.Title = ""
+	newPost.Description = ""
 	data,err := json.Marshal(newPost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
@@ -209,7 +209,7 @@ func GetPost(c *gin.Context) {
 		return
 	}
 
-	postData, found, err := models.GetFullPostById(postIdVal)
+	postsData, found, err := models.GetFullPostById(postIdVal)
 	if found == false {
 		c.JSON(http.StatusBadRequest, gin.H{"description": "The post was not found"})
 		return
@@ -219,7 +219,7 @@ func GetPost(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"description":postData})
+	c.JSON(http.StatusOK, gin.H{"description": postsData})
 
 }
 
