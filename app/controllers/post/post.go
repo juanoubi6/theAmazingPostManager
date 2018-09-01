@@ -51,7 +51,9 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	//Insert into redis, in this case marshal the data
+	//Insert into redis, in this case marshal the data. First delete the description because it's a really big field
+	// we don't want to store
+	newPost.Title = ""
 	data,err := json.Marshal(newPost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
@@ -59,7 +61,7 @@ func CreatePost(c *gin.Context) {
 	}
 	listName := config.GetConfig().LAST_POSTS_LIST_NAME
 	listLimit,_ := strconv.Atoi(config.GetConfig().LAST_POSTS_LENGTH)
-	redis.InsertIntoCappedList(data,listName,listLimit)
+	go redis.InsertIntoCappedList(data,listName,listLimit)
 
 	c.JSON(http.StatusOK, gin.H{"description": newPost})
 

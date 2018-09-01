@@ -216,3 +216,17 @@ func CheckCommentExistance(commentID uint, postID uint)(bool,error){
 	return true, nil
 
 }
+
+func GetLastComments (offset,amount int)([]Comment,error){
+
+	var commentList []Comment
+
+	err := common.GetDatabase().Preload("Author").Order("created desc").Offset(offset).Limit(amount).Find(&commentList).Error
+	if err != nil{
+		return commentList,err
+	}
+
+	return commentList,nil
+
+
+}

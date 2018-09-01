@@ -32,7 +32,7 @@ func CreateRouter() {
 		public.GET("/post/:id", post.GetPost)
 		public.GET("/posts/:postID/comment/:id", comment.GetComment)
 		public.GET("/lastPosts",post.GetLastPosts)
-		public.GET("/lastComments",post.GetLastPosts)
+		public.GET("/lastComments",comment.GetLastComments)
 		//Ultimos 10 post creados
 	}
 

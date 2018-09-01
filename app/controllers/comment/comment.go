@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"theAmazingPostManager/app/common"
 	"theAmazingPostManager/app/models"
+	"strconv"
+	"encoding/json"
+	"theAmazingPostManager/app/config"
+	"theAmazingPostManager/app/helpers/redis"
 )
 
 func AddComment(c *gin.Context) {
@@ -71,6 +75,16 @@ func AddComment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 		return
 	}
+
+	//Insert into redis, in this case marshal the data.
+	data,err := json.Marshal(newComment)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
+	listName := config.GetConfig().LAST_COMMENTS_LIST_NAME
+	listLimit,_ := strconv.Atoi(config.GetConfig().LAST_COMMENTS_LENGTH)
+	go redis.InsertIntoCappedList(data,listName,listLimit)
 
 	c.JSON(http.StatusOK, gin.H{"description": newComment})
 
@@ -244,5 +258,50 @@ func GetComment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"description":commentData})
+
+}
+
+func GetLastComments(c *gin.Context){
+
+	var commentList []models.Comment
+	var amount,_ = strconv.Atoi(config.GetConfig().LAST_COMMENTS_LENGTH)
+	var lastCommentsListName = config.GetConfig().LAST_COMMENTS_LIST_NAME
+
+	//Get posts from redis
+	commentsData,err := redis.RetrieveFromCappedList(lastCommentsListName,amount)
+	if err != nil{
+
+		//Get posts from DB
+		commentList,err = models.GetLastComments(0,amount)
+		if err != nil{
+			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+			return
+		}
+
+	}else{
+
+		//Unmarshal each post from redis
+		var sampleComment models.Comment
+		for _, commentVal := range commentsData {
+			err = json.Unmarshal(commentVal.([]byte),&sampleComment)
+			if err != nil{
+				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+				return
+			}
+			commentList = append(commentList, sampleComment)
+		}
+
+		if len(commentList)< amount{
+			additionalComments,err := models.GetLastComments(len(commentList),amount-len(commentList))
+			if err != nil{
+				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+				return
+			}
+			commentList = append(commentList, additionalComments...)
+		}
+
+	}
+
+	c.JSON(http.StatusOK, gin.H{"description": commentList})
 
 }
