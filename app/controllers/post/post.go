@@ -248,7 +248,7 @@ func GetLastPosts(c *gin.Context){
 	if err != nil{
 
 		//Get posts from DB
-		postList,err = models.GetLastPosts(amount)
+		postList,err = models.GetLastPosts(0,amount)
 		if err != nil{
 			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 			return
@@ -265,6 +265,15 @@ func GetLastPosts(c *gin.Context){
 				return
 			}
 			postList = append(postList,samplePost)
+		}
+
+		if len(postList)< amount{
+			additionalPosts,err := models.GetLastPosts(len(postList),amount-len(postList))
+			if err != nil{
+				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+				return
+			}
+			postList = append(postList, additionalPosts...)
 		}
 
 	}

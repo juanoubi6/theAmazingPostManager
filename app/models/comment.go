@@ -119,7 +119,6 @@ func DeleteCommentAndChildren(commentID uint,postID uint) error {
 	var fatherResult FatherResult
 	r := common.GetDatabase().Table("comments").Select("father").Where("id = ?",commentID).First(&fatherResult)
 	if r.RecordNotFound(){
-		println("no tengo padre")
 		return nil
 	}
 	if err != nil {
