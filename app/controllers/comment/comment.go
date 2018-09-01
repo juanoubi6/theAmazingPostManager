@@ -1,14 +1,14 @@
 package comment
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"theAmazingPostManager/app/common"
-	"theAmazingPostManager/app/models"
 	"strconv"
-	"encoding/json"
+	"theAmazingPostManager/app/common"
 	"theAmazingPostManager/app/config"
 	"theAmazingPostManager/app/helpers/redis"
+	"theAmazingPostManager/app/models"
 )
 
 func AddComment(c *gin.Context) {
@@ -41,8 +41,8 @@ func AddComment(c *gin.Context) {
 			return
 		}
 
-		_,found,err := models.GetCommentById(val)
-		if found == false{
+		_, found, err := models.GetCommentById(val)
+		if found == false {
 			c.JSON(http.StatusBadRequest, gin.H{"description": "Something went wrong", "detail": "Invalid comment father ID"})
 			return
 		}
@@ -65,7 +65,7 @@ func AddComment(c *gin.Context) {
 
 	newComment := models.Comment{
 		AuthorID: authorID,
-		Author:	  userData,
+		Author:   userData,
 		Message:  message,
 		Father:   commentFatherID,
 		PostID:   postIdVal,
@@ -77,14 +77,14 @@ func AddComment(c *gin.Context) {
 	}
 
 	//Insert into redis, in this case marshal the data.
-	data,err := json.Marshal(newComment)
+	data, err := json.Marshal(newComment)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 		return
 	}
 	listName := config.GetConfig().LAST_COMMENTS_LIST_NAME
-	listLimit,_ := strconv.Atoi(config.GetConfig().LAST_COMMENTS_LENGTH)
-	go redis.InsertIntoCappedList(data,listName,listLimit)
+	listLimit, _ := strconv.Atoi(config.GetConfig().LAST_COMMENTS_LENGTH)
+	go redis.InsertIntoCappedList(data, listName, listLimit)
 
 	c.JSON(http.StatusOK, gin.H{"description": newComment})
 
@@ -157,7 +157,7 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 
-	if err := models.DeleteCommentAndChildren(commentData.Id,postIdVal); err != nil {
+	if err := models.DeleteCommentAndChildren(commentData.Id, postIdVal); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 		return
 	}
@@ -185,14 +185,14 @@ func VoteComment(c *gin.Context) {
 		return
 	}
 
-	voteValue,err := getVoteValue(vote)
+	voteValue, err := getVoteValue(vote)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"description": err.Error()})
 		return
 	}
 
 	//Check comment existance
-	exist,err := models.CheckCommentExistance(commentIdVal,postIdVal)
+	exist, err := models.CheckCommentExistance(commentIdVal, postIdVal)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 		return
@@ -203,30 +203,30 @@ func VoteComment(c *gin.Context) {
 	}
 
 	//Check if user has already voted this comment and change the vote
-	commentVoteData, found, err := models.GetCommentVote(userID,commentIdVal)
+	commentVoteData, found, err := models.GetCommentVote(userID, commentIdVal)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 		return
 	}
 	if found == false {
 		newCommentVote := models.CommentVote{
-			UserID:userID,
-			CommentID:commentIdVal,
-			PostID:postIdVal,
-			Positive:voteValue,
+			UserID:    userID,
+			CommentID: commentIdVal,
+			PostID:    postIdVal,
+			Positive:  voteValue,
 		}
 
-		if err := newCommentVote.Save();err != nil{
+		if err := newCommentVote.Save(); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 			return
 		}
-	}else{
-		if commentVoteData.Positive == voteValue{
+	} else {
+		if commentVoteData.Positive == voteValue {
 			c.JSON(http.StatusOK, gin.H{})
 			return
-		}else{
+		} else {
 			commentVoteData.Positive = voteValue
-			if err := commentVoteData.Modify();err != nil{
+			if err := commentVoteData.Modify(); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 				return
 			}
@@ -257,43 +257,43 @@ func GetComment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"description":commentData})
+	c.JSON(http.StatusOK, gin.H{"description": commentData})
 
 }
 
-func GetLastComments(c *gin.Context){
+func GetLastComments(c *gin.Context) {
 
 	var commentList []models.Comment
-	var amount,_ = strconv.Atoi(config.GetConfig().LAST_COMMENTS_LENGTH)
+	var amount, _ = strconv.Atoi(config.GetConfig().LAST_COMMENTS_LENGTH)
 	var lastCommentsListName = config.GetConfig().LAST_COMMENTS_LIST_NAME
 
 	//Get posts from redis
-	commentsData,err := redis.RetrieveFromCappedList(lastCommentsListName,amount)
-	if err != nil{
+	commentsData, err := redis.RetrieveFromCappedList(lastCommentsListName, amount)
+	if err != nil {
 
 		//Get comments from DB
-		commentList,err = models.GetLastComments(0,amount)
-		if err != nil{
+		commentList, err = models.GetLastComments(0, amount)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 			return
 		}
 
-	}else{
+	} else {
 
 		//Unmarshal each comment from redis
 		var sampleComment models.Comment
 		for _, commentVal := range commentsData {
-			err = json.Unmarshal(commentVal.([]byte),&sampleComment)
-			if err != nil{
+			err = json.Unmarshal(commentVal.([]byte), &sampleComment)
+			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 				return
 			}
 			commentList = append(commentList, sampleComment)
 		}
 
-		if len(commentList)< amount{
-			additionalComments,err := models.GetLastComments(len(commentList),amount-len(commentList))
-			if err != nil{
+		if len(commentList) < amount {
+			additionalComments, err := models.GetLastComments(len(commentList), amount-len(commentList))
+			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 				return
 			}

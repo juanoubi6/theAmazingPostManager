@@ -1,14 +1,14 @@
 package post
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"theAmazingPostManager/app/common"
-	"theAmazingPostManager/app/models"
-	"theAmazingPostManager/app/helpers/redis"
-	"theAmazingPostManager/app/config"
 	"strconv"
-	"encoding/json"
+	"theAmazingPostManager/app/common"
+	"theAmazingPostManager/app/config"
+	"theAmazingPostManager/app/helpers/redis"
+	"theAmazingPostManager/app/models"
 )
 
 func CreatePost(c *gin.Context) {
@@ -43,7 +43,7 @@ func CreatePost(c *gin.Context) {
 		AuthorID:    authorID,
 		Title:       title,
 		Description: description,
-		Author:		 userData,
+		Author:      userData,
 	}
 
 	if err := newPost.Save(); err != nil {
@@ -54,14 +54,14 @@ func CreatePost(c *gin.Context) {
 	//Insert into redis, in this case marshal the data. First delete the description because it's a really big field
 	// we don't want to store
 	newPost.Description = ""
-	data,err := json.Marshal(newPost)
+	data, err := json.Marshal(newPost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 		return
 	}
 	listName := config.GetConfig().LAST_POSTS_LIST_NAME
-	listLimit,_ := strconv.Atoi(config.GetConfig().LAST_POSTS_LENGTH)
-	go redis.InsertIntoCappedList(data,listName,listLimit)
+	listLimit, _ := strconv.Atoi(config.GetConfig().LAST_POSTS_LENGTH)
+	go redis.InsertIntoCappedList(data, listName, listLimit)
 
 	c.JSON(http.StatusOK, gin.H{"description": newPost})
 
@@ -159,36 +159,36 @@ func VotePost(c *gin.Context) {
 		return
 	}
 
-	voteValue,err := getVoteValue(vote)
+	voteValue, err := getVoteValue(vote)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"description": err.Error()})
 		return
 	}
 
 	//Check if user has already voted this post and change the vote
-	postVoteData, found, err := models.GetPostVote(userID,postIdVal)
+	postVoteData, found, err := models.GetPostVote(userID, postIdVal)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 		return
 	}
 	if found == false {
 		newPostVote := models.PostVote{
-			UserID:userID,
-			PostID:postIdVal,
-			Positive:voteValue,
+			UserID:   userID,
+			PostID:   postIdVal,
+			Positive: voteValue,
 		}
 
-		if err := newPostVote.Save(); err != nil{
+		if err := newPostVote.Save(); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 			return
 		}
-	}else{
-		if postVoteData.Positive == voteValue{
+	} else {
+		if postVoteData.Positive == voteValue {
 			c.JSON(http.StatusOK, gin.H{})
 			return
-		}else{
+		} else {
 			postVoteData.Positive = voteValue
-			if err := postVoteData.Modify();err != nil{
+			if err := postVoteData.Modify(); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 				return
 			}
@@ -229,7 +229,7 @@ func GetAllPosts(c *gin.Context) {
 	limit := c.MustGet("limit").(int)
 	offset := c.MustGet("offset").(int)
 
-	postsData,quantity,err := models.GetAllPosts(order,limit,offset)
+	postsData, quantity, err := models.GetAllPosts(order, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 		return
@@ -239,39 +239,39 @@ func GetAllPosts(c *gin.Context) {
 
 }
 
-func GetLastPosts(c *gin.Context){
+func GetLastPosts(c *gin.Context) {
 
 	var postList []models.Post
-	var amount,_ = strconv.Atoi(config.GetConfig().LAST_POSTS_LENGTH)
+	var amount, _ = strconv.Atoi(config.GetConfig().LAST_POSTS_LENGTH)
 	var lastPostListName = config.GetConfig().LAST_POSTS_LIST_NAME
 
 	//Get posts from redis
-	postData,err := redis.RetrieveFromCappedList(lastPostListName,amount)
-	if err != nil{
+	postData, err := redis.RetrieveFromCappedList(lastPostListName, amount)
+	if err != nil {
 
 		//Get posts from DB
-		postList,err = models.GetLastPosts(0,amount)
-		if err != nil{
+		postList, err = models.GetLastPosts(0, amount)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 			return
 		}
 
-	}else{
+	} else {
 
 		//Unmarshal each post from redis
 		var samplePost models.Post
-		for _, postVal := range postData{
-			err = json.Unmarshal(postVal.([]byte),&samplePost)
-			if err != nil{
+		for _, postVal := range postData {
+			err = json.Unmarshal(postVal.([]byte), &samplePost)
+			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 				return
 			}
-			postList = append(postList,samplePost)
+			postList = append(postList, samplePost)
 		}
 
-		if len(postList)< amount{
-			additionalPosts,err := models.GetLastPosts(len(postList),amount-len(postList))
-			if err != nil{
+		if len(postList) < amount {
+			additionalPosts, err := models.GetLastPosts(len(postList), amount-len(postList))
+			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
 				return
 			}
@@ -280,6 +280,6 @@ func GetLastPosts(c *gin.Context){
 
 	}
 
-	c.JSON(http.StatusOK, gin.H{"description":postList})
+	c.JSON(http.StatusOK, gin.H{"description": postList})
 
 }

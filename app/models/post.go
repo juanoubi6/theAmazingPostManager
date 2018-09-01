@@ -6,15 +6,15 @@ import (
 )
 
 type Post struct {
-	Id          uint      `gorm:"primary_key"`
-	AuthorID    uint      `gorm:"not null" json:"-"`
-	Author      User      `gorm:"ForeignKey:AuthorID"`
-	Title       string    `gorm:"not null"`
-	Description string    `gorm:"not null;type:text"`
-	Comments    []Comment `gorm:"ForeignKey:PostID"`
-	Votes       int       `gorm:"default:0"`
-	Created		time.Time `gorm:"default:current_timestamp"`
-	CommentQuantity	int	  `gorm:"default:0"`
+	Id              uint      `gorm:"primary_key"`
+	AuthorID        uint      `gorm:"not null" json:"-"`
+	Author          User      `gorm:"ForeignKey:AuthorID"`
+	Title           string    `gorm:"not null"`
+	Description     string    `gorm:"not null;type:text"`
+	Comments        []Comment `gorm:"ForeignKey:PostID"`
+	Votes           int       `gorm:"default:0"`
+	Created         time.Time `gorm:"default:current_timestamp"`
+	CommentQuantity int       `gorm:"default:0"`
 }
 
 type PostVote struct {
@@ -23,13 +23,13 @@ type PostVote struct {
 	Positive bool
 }
 
-type PostView struct{
-	Id          uint
-	Author      User
-	Title       string
-	Votes       int
-	Created		time.Time
-	CommentQuantity	int
+type PostView struct {
+	Id              uint
+	Author          User
+	Title           string
+	Votes           int
+	Created         time.Time
+	CommentQuantity int
 }
 
 func (postData *Post) Save() error {
@@ -134,11 +134,11 @@ func GetPostById(id uint) (Post, bool, error) {
 	return post, true, nil
 }
 
-func GetPostVote(userID uint,postID uint) (PostVote, bool, error) {
+func GetPostVote(userID uint, postID uint) (PostVote, bool, error) {
 
 	postVote := PostVote{}
 
-	r := common.GetDatabase().Where("user_id = ? and post_id = ?", userID,postID).First(&postVote)
+	r := common.GetDatabase().Where("user_id = ? and post_id = ?", userID, postID).First(&postVote)
 	if r.RecordNotFound() {
 		return postVote, false, nil
 	}
@@ -167,7 +167,7 @@ func GetFullPostById(id uint) (*Post, bool, error) {
 	return &post, true, nil
 }
 
-func GetAllPosts (order string,limit int,offset int)([]PostView,int,error){
+func GetAllPosts(order string, limit int, offset int) ([]PostView, int, error) {
 
 	var posts []Post
 	var postsView []PostView
@@ -185,14 +185,14 @@ func GetAllPosts (order string,limit int,offset int)([]PostView,int,error){
 		return postsView, 0, r.Error
 	}
 
-	for _, postData := range posts{
-		postsView = append(postsView,PostView{
-			Id:postData.Id,
-			Author:postData.Author,
-			Title:postData.Title,
-			Votes:postData.Votes,
-			Created:postData.Created,
-			CommentQuantity:postData.CommentQuantity,
+	for _, postData := range posts {
+		postsView = append(postsView, PostView{
+			Id:              postData.Id,
+			Author:          postData.Author,
+			Title:           postData.Title,
+			Votes:           postData.Votes,
+			Created:         postData.Created,
+			CommentQuantity: postData.CommentQuantity,
 		})
 	}
 
@@ -200,16 +200,15 @@ func GetAllPosts (order string,limit int,offset int)([]PostView,int,error){
 
 }
 
-func GetLastPosts (offset,amount int)([]Post,error){
+func GetLastPosts(offset, amount int) ([]Post, error) {
 
 	var postList []Post
 
 	err := common.GetDatabase().Preload("Author").Order("created desc").Offset(offset).Limit(amount).Find(&postList).Error
-	if err != nil{
-		return postList,err
+	if err != nil {
+		return postList, err
 	}
 
-	return postList,nil
-
+	return postList, nil
 
 }

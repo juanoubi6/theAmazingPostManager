@@ -31,8 +31,8 @@ func CreateRouter() {
 		public.GET("/post", middleware.Paginate(), post.GetAllPosts)
 		public.GET("/post/:id", post.GetPost)
 		public.GET("/posts/:postID/comment/:id", comment.GetComment)
-		public.GET("/lastPosts",post.GetLastPosts)
-		public.GET("/lastComments",comment.GetLastComments)
+		public.GET("/lastPosts", post.GetLastPosts)
+		public.GET("/lastComments", comment.GetLastComments)
 	}
 
 	postCreation := router.Group("/post", middleware.ValidateToken())

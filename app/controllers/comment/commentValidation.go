@@ -17,18 +17,18 @@ func validateMessage(message string) (bool, string) {
 
 }
 
-func getVoteValue(vote string)(bool,error){
+func getVoteValue(vote string) (bool, error) {
 
-	if vote == ""{
+	if vote == "" {
 		return false, errors.New("Vote is empty")
 	}
 
-	if vote == "true"{
-		return true,nil
-	}else if vote == "false"{
-		return false,nil
-	}else{
-		return false,errors.New("Invalid vote")
+	if vote == "true" {
+		return true, nil
+	} else if vote == "false" {
+		return false, nil
+	} else {
+		return false, errors.New("Invalid vote")
 	}
 
 }

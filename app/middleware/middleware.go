@@ -110,9 +110,9 @@ func IsPostOwner(allowAdmins bool) gin.HandlerFunc {
 			return
 		}
 
-		if postData.AuthorID == userData.ID || (allowAdmins == true && userData.RoleID == models.ADMIN){
+		if postData.AuthorID == userData.ID || (allowAdmins == true && userData.RoleID == models.ADMIN) {
 			c.Next()
-		}else{
+		} else {
 			c.JSON(http.StatusForbidden, gin.H{"description": "You are not allowed to make changes to this post"})
 			c.Abort()
 			return

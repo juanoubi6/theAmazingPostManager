@@ -1,8 +1,8 @@
 package config
 
 import (
-	"os"
 	"bufio"
+	"os"
 	"strings"
 )
 
@@ -12,11 +12,11 @@ type Config struct {
 	JWT_SECRET string
 	CORS       string
 
-	REDIS_ADDR	string
-	LAST_COMMENTS_LIST_NAME	string
-	LAST_POSTS_LIST_NAME	string
-	LAST_COMMENTS_LENGTH	string
-	LAST_POSTS_LENGTH	string
+	REDIS_ADDR              string
+	LAST_COMMENTS_LIST_NAME string
+	LAST_POSTS_LIST_NAME    string
+	LAST_COMMENTS_LENGTH    string
+	LAST_POSTS_LENGTH       string
 
 	DB_TYPE     string
 	DB_USERNAME string
@@ -31,7 +31,7 @@ var instance *Config
 func GetConfig() *Config {
 	if instance == nil {
 		err := readEnv()
-		if err != nil{
+		if err != nil {
 			panic(err)
 		}
 		config := newConfig()
@@ -47,11 +47,11 @@ func newConfig() Config {
 		JWT_SECRET: GetEnv("JWT_SECRET", "j8Ah4kO3"),
 		CORS:       GetEnv("CORS", ""),
 
-		REDIS_ADDR:       GetEnv("REDIS_ADDR", ":6379"),
+		REDIS_ADDR: GetEnv("REDIS_ADDR", ":6379"),
 
-		LAST_COMMENTS_LIST_NAME:       GetEnv("LAST_COMMENTS_LIST_NAME", "lastComments"),
-		LAST_POSTS_LIST_NAME:       GetEnv("LAST_POSTS_LIST_NAME", "lastPosts"),
-		LAST_COMMENTS_LENGTH:       GetEnv("LAST_COMMENTS_LENGTH", "10"),
+		LAST_COMMENTS_LIST_NAME: GetEnv("LAST_COMMENTS_LIST_NAME", "lastComments"),
+		LAST_POSTS_LIST_NAME:    GetEnv("LAST_POSTS_LIST_NAME", "lastPosts"),
+		LAST_COMMENTS_LENGTH:    GetEnv("LAST_COMMENTS_LENGTH", "10"),
 		LAST_POSTS_LENGTH:       GetEnv("LAST_POSTS_LENGTH", "10"),
 
 		DB_TYPE:     GetEnv("DB_TYPE", "mysql"),
@@ -70,7 +70,7 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
-func readEnv() error{
+func readEnv() error {
 	file, err := os.Open(".env")
 	if err != nil {
 		return nil
@@ -79,10 +79,10 @@ func readEnv() error{
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		values := strings.Split(scanner.Text(),"=")
-		if len(values)==2{
-			err = os.Setenv(values[0],values[1])
-			if err != nil{
+		values := strings.Split(scanner.Text(), "=")
+		if len(values) == 2 {
+			err = os.Setenv(values[0], values[1])
+			if err != nil {
 				return err
 			}
 		}

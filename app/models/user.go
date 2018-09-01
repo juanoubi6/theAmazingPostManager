@@ -7,14 +7,14 @@ import (
 
 type User struct {
 	gorm.Model
-	GUID                 string         `gorm:"type:char(20);unique_index:idx_unique_guid_object" json:"ID"`
-	Name                 string         `gorm:"null"`
-	LastName             string         `gorm:"null"`
-	Email                string         `gorm:"not null" json:"-"`
-	Phone                string         `gorm:"null" json:"-"`
-	PasswordRecoveryCode string         `gorm:"null" json:"-"`
-	RoleID               uint           `gorm:"not null" json:"-"`
-	Role                 Role           `gorm:"ForeignKey:RoleID" json:"-"`
+	GUID                 string `gorm:"type:char(20);unique_index:idx_unique_guid_object" json:"ID"`
+	Name                 string `gorm:"null"`
+	LastName             string `gorm:"null"`
+	Email                string `gorm:"not null" json:"-"`
+	Phone                string `gorm:"null" json:"-"`
+	PasswordRecoveryCode string `gorm:"null" json:"-"`
+	RoleID               uint   `gorm:"not null" json:"-"`
+	Role                 Role   `gorm:"ForeignKey:RoleID" json:"-"`
 	//ProfilePicture       ProfilePicture `gorm:"ForeignKey:UserID"`
 }
 
