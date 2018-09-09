@@ -18,6 +18,12 @@ type Config struct {
 	LAST_COMMENTS_LENGTH    string
 	LAST_POSTS_LENGTH       string
 
+	RABBITMQ_USER     string
+	RABBITMQ_PASSWORD string
+	RABBITMQ_HOST     string
+	RABBITMQ_PORT     string
+	RABBIT_NOTIFICATION_EXCHANGE string
+
 	DB_TYPE     string
 	DB_USERNAME string
 	DB_PASSWORD string
@@ -48,6 +54,12 @@ func newConfig() Config {
 		CORS:       GetEnv("CORS", ""),
 
 		REDIS_ADDR: GetEnv("REDIS_ADDR", ":6379"),
+
+		RABBITMQ_HOST:     GetEnv("RABBITMQ_HOST", "localhost"),
+		RABBITMQ_PORT:     GetEnv("RABBITMQ_PORT", "5672"),
+		RABBITMQ_USER:     GetEnv("RABBITMQ_USER", "guest"),
+		RABBITMQ_PASSWORD: GetEnv("RABBITMQ_PASSWORD", "guest"),
+		RABBIT_NOTIFICATION_EXCHANGE: GetEnv("RABBIT_NOTIFICATION_EXCHANGE", "notifications_queue"),
 
 		LAST_COMMENTS_LIST_NAME: GetEnv("LAST_COMMENTS_LIST_NAME", "lastComments"),
 		LAST_POSTS_LIST_NAME:    GetEnv("LAST_POSTS_LIST_NAME", "lastPosts"),

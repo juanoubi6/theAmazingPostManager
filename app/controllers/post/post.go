@@ -9,6 +9,8 @@ import (
 	"theAmazingPostManager/app/config"
 	"theAmazingPostManager/app/helpers/redis"
 	"theAmazingPostManager/app/models"
+	"theAmazingPostManager/app/services/theAmazingNotificator"
+	"theAmazingPostManager/app/communications/rabbitMQ/tasks"
 )
 
 func CreatePost(c *gin.Context) {
@@ -193,6 +195,13 @@ func VotePost(c *gin.Context) {
 				return
 			}
 		}
+	}
+
+	//Send notification
+	newNotificationTask := tasks.NewPostVoteNotificationTask(postIdVal,userID)
+	if err := theAmazingNotificator.SendNotification(newNotificationTask,"post-vote");err != nil{
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{})

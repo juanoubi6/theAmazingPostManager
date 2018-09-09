@@ -9,6 +9,9 @@ import (
 	"theAmazingPostManager/app/config"
 	"theAmazingPostManager/app/helpers/redis"
 	"theAmazingPostManager/app/models"
+	"theAmazingPostManager/app/communications/rabbitMQ/tasks"
+	"theAmazingPostManager/app/communications/rabbitMQ"
+	"theAmazingPostManager/app/services/theAmazingNotificator"
 )
 
 func AddComment(c *gin.Context) {
@@ -85,6 +88,21 @@ func AddComment(c *gin.Context) {
 	listName := config.GetConfig().LAST_COMMENTS_LIST_NAME
 	listLimit, _ := strconv.Atoi(config.GetConfig().LAST_COMMENTS_LENGTH)
 	go redis.InsertIntoCappedList(data, listName, listLimit)
+
+	//Send notification
+	var newNotificationTask rabbitMQ.RabbitMQTask
+	var routingKey string
+	if wasInformedFather == true{
+		newNotificationTask = tasks.NewCommentCommentNotificationTask(newComment.Father,newComment.Id)
+		routingKey = "comment-comment"
+	}else{
+		newNotificationTask = tasks.NewPostCommentNotificationTask(newComment.PostID,newComment.Id)
+		routingKey = "post-comment"
+	}
+	if err := theAmazingNotificator.SendNotification(newNotificationTask,routingKey);err != nil{
+		c.JSON(http.StatusInternalServerError, gin.H{"description": "Something went wrong", "detail": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"description": newComment})
 

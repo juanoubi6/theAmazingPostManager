@@ -7,6 +7,7 @@ import (
 
 func main() {
 	common.ConnectToDatabase()
+	common.ConnectToRabbitMQ()
 	common.CreateRedisConnectionPool()
 	router.CreateRouter()
 	router.RunRouter()
